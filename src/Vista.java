@@ -1,50 +1,70 @@
 import java.util.List;
-import java.util.Scanner;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 
+// Muestra las ventanas y recibe los datos del usuario.
 public class Vista {
 
-    private Scanner scanner;
-
     public Vista() {
-        scanner = new Scanner(System.in);
     }
 
     public int mostrarMenu() {
-        System.out.println("\n---- GESTOR DE INTEGRACIONES ----");
-        System.out.println("1. Listar integraciones activas");
-        System.out.println("2. Buscar integración");
-        System.out.println("3. Ordenar integraciones por latencia");
-        System.out.println("4. Consultar estado de una operación");
-        System.out.println("5. Realizar cobro");
-        System.out.println("6. Realizar reintegro");
-        System.out.println("7. Generar documento");
-        System.out.println("8. Generar registro de auditoría");
-        System.out.println("0. Salir\n");
+        String[] opciones = {
+            "1. Listar integraciones activas",
+            "2. Buscar integración",
+            "3. Ordenar integraciones por latencia",
+            "4. Consultar estado de una operación",
+            "5. Realizar cobro",
+            "6. Realizar reintegro",
+            "7. Generar documento",
+            "8. Generar registro de auditoría",
+            "0. Salir"
+        };
 
-        return leerEntero("Selecciona una opción: ");
+        String seleccion = (String) JOptionPane.showInputDialog(null, "Selecciona una opción:", 
+                "Gestor de integraciones", JOptionPane.QUESTION_MESSAGE, null, opciones, opciones[0]);
+
+        if (seleccion == null) {
+            return 0;
+        }
+
+        return Integer.parseInt(seleccion.substring(0, 1));
     }
 
     public String leerTexto(String mensaje) {
-        System.out.print(mensaje);
-        return scanner.nextLine().trim();
+        String texto = JOptionPane.showInputDialog(null, mensaje, "Ingreso de datos", JOptionPane.QUESTION_MESSAGE);
+
+        if (texto == null) {
+            return "";
+        } 
+        else {
+            return texto.trim();
+        }
     }
 
     public int leerEntero(String mensaje) {
         int numero = 0;
         boolean valido = false;
+        boolean cancelado = false;
 
         do {
-            String entrada = leerTexto(mensaje);
+            String entrada = JOptionPane.showInputDialog(null, mensaje, "Ingreso de datos", JOptionPane.QUESTION_MESSAGE);
 
-            try {
-                numero = Integer.parseInt(entrada);
-                valido = true;
+            if (entrada == null) {
+                cancelado = true;
             } 
-            catch (NumberFormatException e) {
-                mostrarMensaje("Debes ingresar un número entero válido.");
+            else {
+                try {
+                    numero = Integer.parseInt(entrada.trim());
+                    valido = true;
+                } 
+                catch (NumberFormatException e) {
+                    mostrarMensaje("Debes ingresar un número entero válido.");
+                }
             }
         } 
-        while (!valido);
+        while (!valido && !cancelado);
 
         return numero;
     }
@@ -52,53 +72,67 @@ public class Vista {
     public double leerDouble(String mensaje) {
         double numero = 0;
         boolean valido = false;
+        boolean cancelado = false;
 
         do {
-            String entrada = leerTexto(mensaje);
+            String entrada = JOptionPane.showInputDialog(null, mensaje, "Ingreso de datos", JOptionPane.QUESTION_MESSAGE);
 
-            try {
-                numero = Double.parseDouble(entrada);
-
-                if (Double.isFinite(numero)) {
-                    valido = true;
-                } 
-                else {
-                    mostrarMensaje("Debes ingresar un número finito.");
-                }
+            if (entrada == null) {
+                cancelado = true;
             } 
-            catch (NumberFormatException e) {
-                mostrarMensaje("Debes ingresar un número válido.");
+            else {
+                try {
+                    numero = Double.parseDouble(entrada.trim());
+
+                    if (Double.isFinite(numero)) {
+                        valido = true;
+                    } 
+                    else {
+                        mostrarMensaje("Debes ingresar un número finito.");
+                    }
+                } 
+                catch (NumberFormatException e) {
+                    mostrarMensaje("Debes ingresar un número válido.");
+                }
             }
         } 
-        while (!valido);
+        while (!valido && !cancelado);
 
         return numero;
     }
 
     public void mostrarIntegraciones(List<IntegracionAPI> integraciones, boolean soloActivas) {
-
-        boolean encontrada = false;
+        String texto = "";
 
         for (IntegracionAPI integracion : integraciones) {
             if (!soloActivas || integracion.isActiva()) {
-                System.out.println(integracion);
-                encontrada = true;
+                texto = texto + integracion.toString() + "\n\n";
             }
         }
 
-        if (!encontrada) {
+        if (texto.isEmpty()) {
             mostrarMensaje("No hay integraciones para mostrar.");
+        } 
+        else {
+            JTextArea area = new JTextArea(texto, 15, 65);
+            area.setEditable(false);
+            area.setLineWrap(true);
+            area.setWrapStyleWord(true);
+            area.setCaretPosition(0);
+
+            JScrollPane desplazamiento = new JScrollPane(area);
+
+            JOptionPane.showMessageDialog(null, desplazamiento, "Catálogo de integraciones", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
     public void mostrarConfiguracion(IntegracionAPI integracion) {
-        System.out.println("\n---- CONFIGURACIÓN ----");
-        System.out.println(integracion);
-        System.out.println("URL base: " + integracion.getUrlBase());
-        System.out.println("Parámetros: " + integracion.getParametrosConfiguracion());
+        String texto = integracion.toString() + "\n\nURL base: " + integracion.getUrlBase() + "\nParámetros: " + integracion.getParametrosConfiguracion();
+
+        JOptionPane.showMessageDialog(null, texto, "Configuración de la integración", JOptionPane.INFORMATION_MESSAGE);
     }
 
     public void mostrarMensaje(String mensaje) {
-        System.out.println(mensaje);
+        JOptionPane.showMessageDialog(null, mensaje, "Gestor de integraciones", JOptionPane.INFORMATION_MESSAGE);
     }
 }
